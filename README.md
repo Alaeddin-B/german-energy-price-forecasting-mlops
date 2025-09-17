@@ -53,6 +53,25 @@ The planned architecture is designed for automation, reproducibility, and scalab
 
 ---
 
+## 📁 Project Structure
+
+```text
+├── LICENSE
+├── README.md
+├── requirements.txt
+├── data/
+│   ├── processed/           # Processed datasets (currently empty)
+│   └── raw/                 # Raw data files from SMARD.de
+│       ├── Actual_generation_202101010000_202509180000_Hour.csv
+│       └── Day-ahead_prices_202101010000_202509180000_Hour.csv
+├── notebooks/               # Jupyter notebooks (currently empty)
+├── scripts/                 # Utility and pipeline scripts (currently empty)
+├── src/                     # Source code for the project (currently empty)
+└── tests/                   # Unit and integration tests (currently empty)
+```
+
+---
+
 ## 🛠️ Setup (Work in Progress)
 
 As the project is in its initial phase, the primary setup involves cloning the repository and creating a local Python environment. Instructions will be updated as key milestones (like Dockerization) are completed.
