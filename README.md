@@ -2,7 +2,7 @@
 
 ![Project Status: In Progress](https://img.shields.io/badge/status-in%20progress-blue)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![Python Version](https://img.shields.io/badge/python-3.9-blue.svg)
+![Python Version](https://img.shields.io/badge/python-3.17-blue.svg)
 
 This repository documents the development of a production-ready MLOps pipeline for forecasting day-ahead wholesale electricity prices in the German market. The goal of this project is to build a complete, automated system that demonstrates practical skills in MLOps and cloud engineering, moving beyond academic concepts to a deployable solution.
 
