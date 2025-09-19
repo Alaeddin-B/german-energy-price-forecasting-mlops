@@ -95,3 +95,13 @@ As the project is in its initial phase, the primary setup involves cloning the r
     ```bash
     pip install -r requirements.txt
     ```
+
+---
+
+## 🚩 Challenges Encountered
+
+### Lagged Time Series Features
+
+When I started visualizing the data in my EDA, I realized I needed to use lagged features (previous values in the time series) for forecasting. I don't fully understand how to create and use these features yet, so I need to learn more about them before I can use them properly.
+
+---
