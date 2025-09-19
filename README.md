@@ -64,7 +64,7 @@ The planned architecture is designed for automation, reproducibility, and scalab
 │   └── raw/                 # Raw data files from SMARD.de
 │       ├── Actual_generation_202101010000_202509180000_Hour.csv
 │       └── Day-ahead_prices_202101010000_202509180000_Hour.csv
-├── notebooks/               # Jupyter notebooks (currently empty)
+├── notebooks/               # Jupyter notebooks (contains 01-EDA.ipynb for EDA)
 ├── scripts/                 # Utility and pipeline scripts (currently empty)
 ├── src/                     # Source code for the project (currently empty)
 └── tests/                   # Unit and integration tests (currently empty)
@@ -75,6 +75,8 @@ The planned architecture is designed for automation, reproducibility, and scalab
 ## 🛠️ Setup (Work in Progress)
 
 As the project is in its initial phase, the primary setup involves cloning the repository and creating a local Python environment. Instructions will be updated as key milestones (like Dockerization) are completed.
+
+Currently, only exploratory data analysis (EDA) is implemented in the `notebooks/01-EDA.ipynb` notebook. The rest of the pipeline (modeling, MLflow, Docker, CI/CD, API, and cloud deployment) is planned but not yet present in the codebase. The setup below is for running the EDA notebook. Instructions will be updated as new milestones are completed.
 
 1. **Clone the repository:**
 
