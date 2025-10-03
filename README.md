@@ -20,7 +20,7 @@ The data is sourced from **SMARD.de**, the official market data platform of the 
 
 This project is being developed over an 8-week sprint. This roadmap outlines the key milestones and will be updated as the project progresses.
 
-* [x] **Week 1:** Project Scaffolding & Data Ingestion
+* [x] **Week 1:** Project Scaffolding, Data Ingestion & Complete EDA with Feature Engineering
 * [ ] **Week 2:** Baseline Modeling & Experiment Tracking (MLflow)
 * [ ] **Week 3:** Containerization for Reproducibility (Docker)
 * [ ] **Week 4:** Automation with CI/CT Pipeline (GitHub Actions)
@@ -60,7 +60,16 @@ The planned architecture is designed for automation, reproducibility, and scalab
 ├── README.md
 ├── requirements.txt
 ├── data/
-│   ├── processed/           # Processed datasets (currently empty)
+│   ├── interim/             # Clean intermediate datasets with metadata
+│   │   ├── actual_generation_clean.parquet
+│   │   ├── actual_generation_clean.metadata.json
+│   │   ├── day_ahead_prices_clean.parquet
+│   │   └── day_ahead_prices_clean.metadata.json
+│   ├── processed/           # Model-ready feature datasets with train/test splits
+│   │   ├── features_v1_20251003.parquet
+│   │   ├── train_v1_20251003.parquet
+│   │   ├── test_v1_20251003.parquet
+│   │   └── corresponding .metadata.json files
 │   └── raw/                 # Raw data files from SMARD.de
 │       ├── Actual_generation_202101010000_202509180000_Hour.csv
 │       └── Day-ahead_prices_202101010000_202509180000_Hour.csv
@@ -76,7 +85,7 @@ The planned architecture is designed for automation, reproducibility, and scalab
 
 As the project is in its initial phase, the primary setup involves cloning the repository and creating a local Python environment. Instructions will be updated as key milestones (like Dockerization) are completed.
 
-Currently, only exploratory data analysis (EDA) is implemented in the `notebooks/01-EDA.ipynb` notebook. The rest of the pipeline (modeling, MLflow, Docker, CI/CD, API, and cloud deployment) is planned but not yet present in the codebase. The setup below is for running the EDA notebook. Instructions will be updated as new milestones are completed.
+**Week 1 Complete:** Comprehensive EDA and feature engineering has been implemented in `notebooks/01-EDA.ipynb`, with clean datasets and model-ready features saved to the `data/` directory. The rest of the pipeline (modeling, MLflow, Docker, CI/CD, API, and cloud deployment) is planned for upcoming weeks.
 
 1. **Clone the repository:**
 
@@ -100,10 +109,42 @@ Currently, only exploratory data analysis (EDA) is implemented in the `notebooks
 
 ---
 
-## 🚩 Challenges Encountered
+## 🚩 Challenges Encountered & Solutions
 
-### Lagged Time Series Features
+### Lagged Time Series Features ✅ **SOLVED**
 
-When I started visualizing the data in my EDA, I realized I needed to use lagged features (previous values in the time series) for forecasting. I don't fully understand how to create and use these features yet, so I need to learn more about them before I can use them properly.
+**Challenge:** When I started visualizing the data in my EDA, I realized I needed to use lagged features (previous values in the time series) for forecasting. I didn't fully understand how to create and use these features properly.
+
+**Solution:** Successfully implemented comprehensive lag feature engineering including:
+
+* Previous day prices (24h lag) and weekly prices (168h lag)
+* Rolling statistics (3-day moving averages, 24-hour standard deviations)
+* Cross-border price spreads and relative spreads
+* Renewable energy ratio dynamics with temporal interactions
+* Autocorrelation analysis validated 24h and 168h cycles
+
+## 📊 Week 1 Accomplishments
+
+### Data Processing Pipeline
+
+* ✅ **Clean Data Layer**: Processed 41K+ hourly records (2021-2025) with proper datetime indexing
+* ✅ **Feature Engineering**: Created 20+ engineered features including temporal, lag, and derived features
+* ✅ **Data Quality**: Handled missing values, German nuclear phase-out gaps, and data type conversions
+* ✅ **Train/Test Split**: Prepared model-ready datasets with temporal split (70/30 around June 2024)
+
+### Key Insights Discovered
+
+* **Market Integration**: Neighboring country prices show strongest correlation (~0.9) with German prices
+* **Renewable Impact**: Higher renewable generation correlates with lower prices (correlation ~-0.4)
+* **Temporal Patterns**: Clear 24-hour and weekly cycles validated through autocorrelation analysis
+* **Seasonality**: Winter and autumn months show significantly higher price medians
+* **Negative Prices**: Identified rare but important supply-excess periods in the data
+
+### Technical Implementation
+
+* **Metadata Tracking**: JSON metadata files accompany all processed datasets
+* **Parquet Storage**: Efficient columnar storage for all intermediate and final datasets
+* **Temporal Features**: Cyclic encoding for hour, day, month, and seasonal patterns
+* **Validation**: Autocorrelation analysis confirmed lag feature selection strategy
 
 ---

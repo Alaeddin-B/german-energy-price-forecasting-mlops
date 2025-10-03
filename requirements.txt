@@ -2,4 +2,6 @@ pandas
 numpy
 matplotlib
 seaborn
-scikit-learn
+holidays
+statsmodels
+pathlib
