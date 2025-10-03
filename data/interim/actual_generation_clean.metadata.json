@@ -1,0 +1,40 @@
+{
+  "rows": 41279,
+  "columns": [
+    "End date",
+    "Biomass [MWh] Calculated resolutions",
+    "Hydropower [MWh] Calculated resolutions",
+    "Wind offshore [MWh] Calculated resolutions",
+    "Wind onshore [MWh] Calculated resolutions",
+    "Photovoltaics [MWh] Calculated resolutions",
+    "Other renewable [MWh] Calculated resolutions",
+    "Nuclear [MWh] Calculated resolutions",
+    "Lignite [MWh] Calculated resolutions",
+    "Hard coal [MWh] Calculated resolutions",
+    "Fossil gas [MWh] Calculated resolutions",
+    "Hydro pumped storage [MWh] Calculated resolutions",
+    "Other conventional [MWh] Calculated resolutions"
+  ],
+  "dtypes": {
+    "End date": "datetime64[ns]",
+    "Biomass [MWh] Calculated resolutions": "float64",
+    "Hydropower [MWh] Calculated resolutions": "float64",
+    "Wind offshore [MWh] Calculated resolutions": "float64",
+    "Wind onshore [MWh] Calculated resolutions": "float64",
+    "Photovoltaics [MWh] Calculated resolutions": "float64",
+    "Other renewable [MWh] Calculated resolutions": "float64",
+    "Nuclear [MWh] Calculated resolutions": "float64",
+    "Lignite [MWh] Calculated resolutions": "float64",
+    "Hard coal [MWh] Calculated resolutions": "float64",
+    "Fossil gas [MWh] Calculated resolutions": "float64",
+    "Hydro pumped storage [MWh] Calculated resolutions": "float64",
+    "Other conventional [MWh] Calculated resolutions": "float64"
+  },
+  "created_utc": "2025-10-03T21:43:47.226983+00:00",
+  "source_raw_files": [
+    "../data/raw/Actual_generation_202101010000_202509180000_Hour.csv",
+    "../data/raw/Day-ahead_prices_202101010000_202509180000_Hour.csv"
+  ],
+  "layer": "interim",
+  "description": "Cleaned actual generation (hourly) post-trim."
+}

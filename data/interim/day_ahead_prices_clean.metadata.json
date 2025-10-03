@@ -1,0 +1,48 @@
+{
+  "rows": 41279,
+  "columns": [
+    "End date",
+    "Germany/Luxembourg [\u20ac/MWh] Original resolutions",
+    "\u2205 DE/LU neighbours [\u20ac/MWh] Original resolutions",
+    "Belgium [\u20ac/MWh] Original resolutions",
+    "Denmark 1 [\u20ac/MWh] Original resolutions",
+    "Denmark 2 [\u20ac/MWh] Original resolutions",
+    "France [\u20ac/MWh] Original resolutions",
+    "Netherlands [\u20ac/MWh] Original resolutions",
+    "Norway 2 [\u20ac/MWh] Original resolutions",
+    "Austria [\u20ac/MWh] Original resolutions",
+    "Poland [\u20ac/MWh] Original resolutions",
+    "Sweden 4 [\u20ac/MWh] Original resolutions",
+    "Switzerland [\u20ac/MWh] Original resolutions",
+    "Czech Republic [\u20ac/MWh] Original resolutions",
+    "Northern Italy [\u20ac/MWh] Calculated resolutions",
+    "Slovenia [\u20ac/MWh] Original resolutions",
+    "Hungary [\u20ac/MWh] Original resolutions"
+  ],
+  "dtypes": {
+    "End date": "datetime64[ns]",
+    "Germany/Luxembourg [\u20ac/MWh] Original resolutions": "float64",
+    "\u2205 DE/LU neighbours [\u20ac/MWh] Original resolutions": "float64",
+    "Belgium [\u20ac/MWh] Original resolutions": "float64",
+    "Denmark 1 [\u20ac/MWh] Original resolutions": "float64",
+    "Denmark 2 [\u20ac/MWh] Original resolutions": "float64",
+    "France [\u20ac/MWh] Original resolutions": "float64",
+    "Netherlands [\u20ac/MWh] Original resolutions": "float64",
+    "Norway 2 [\u20ac/MWh] Original resolutions": "float64",
+    "Austria [\u20ac/MWh] Original resolutions": "float64",
+    "Poland [\u20ac/MWh] Original resolutions": "float64",
+    "Sweden 4 [\u20ac/MWh] Original resolutions": "float64",
+    "Switzerland [\u20ac/MWh] Original resolutions": "float64",
+    "Czech Republic [\u20ac/MWh] Original resolutions": "float64",
+    "Northern Italy [\u20ac/MWh] Calculated resolutions": "float64",
+    "Slovenia [\u20ac/MWh] Original resolutions": "float64",
+    "Hungary [\u20ac/MWh] Original resolutions": "float64"
+  },
+  "created_utc": "2025-10-03T21:43:47.228234+00:00",
+  "source_raw_files": [
+    "../data/raw/Actual_generation_202101010000_202509180000_Hour.csv",
+    "../data/raw/Day-ahead_prices_202101010000_202509180000_Hour.csv"
+  ],
+  "layer": "interim",
+  "description": "Cleaned day-ahead prices (hourly) post-trim."
+}
