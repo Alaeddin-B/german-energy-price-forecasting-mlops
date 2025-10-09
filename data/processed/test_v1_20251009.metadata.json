@@ -1,5 +1,5 @@
 {
-  "rows": 29765,
+  "rows": 11354,
   "columns": [
     "Germany/Luxembourg [\u20ac/MWh]",
     "Germany/Luxembourg [\u20ac/MWh] Previous Day",
@@ -54,12 +54,12 @@
     "month_sin": "float64",
     "month_cos": "float64"
   },
-  "created_utc": "2025-10-03T21:43:47.766522+00:00",
+  "created_utc": "2025-10-09T07:32:44.674649+00:00",
   "source_raw_files": [
     "../data/raw/Actual_generation_202101010000_202509180000_Hour.csv",
     "../data/raw/Day-ahead_prices_202101010000_202509180000_Hour.csv"
   ],
   "layer": "processed",
-  "split": "train",
-  "range_end": "2024-06-01"
+  "split": "test",
+  "range_start": "2024-06-01"
 }

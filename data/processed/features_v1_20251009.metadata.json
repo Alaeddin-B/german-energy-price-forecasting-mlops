@@ -54,7 +54,7 @@
     "month_sin": "float64",
     "month_cos": "float64"
   },
-  "created_utc": "2025-10-03T21:43:47.662121+00:00",
+  "created_utc": "2025-10-09T07:32:44.575647+00:00",
   "source_raw_files": [
     "../data/raw/Actual_generation_202101010000_202509180000_Hour.csv",
     "../data/raw/Day-ahead_prices_202101010000_202509180000_Hour.csv"
