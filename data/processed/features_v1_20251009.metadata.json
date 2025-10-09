@@ -13,7 +13,6 @@
     "Renewable Ratio Delta",
     "Hour-Renewable Interaction",
     "Neighboring Countries Previous Day Spread",
-    "Neighbor Relative Spread Previous Day",
     "\u2205 DE/LU neighbours [\u20ac/MWh] Previous Day",
     "\u2205 DE/LU neighbours [\u20ac/MWh] Previous Day 24-Hour Std",
     "\u2205 DE/LU neighbours [\u20ac/MWh] 3-Day MA",
@@ -40,7 +39,6 @@
     "Renewable Ratio Delta": "float64",
     "Hour-Renewable Interaction": "float64",
     "Neighboring Countries Previous Day Spread": "float64",
-    "Neighbor Relative Spread Previous Day": "float64",
     "\u2205 DE/LU neighbours [\u20ac/MWh] Previous Day": "float64",
     "\u2205 DE/LU neighbours [\u20ac/MWh] Previous Day 24-Hour Std": "float64",
     "\u2205 DE/LU neighbours [\u20ac/MWh] 3-Day MA": "float64",
@@ -54,7 +52,7 @@
     "month_sin": "float64",
     "month_cos": "float64"
   },
-  "created_utc": "2025-10-09T07:32:44.575647+00:00",
+  "created_utc": "2025-10-09T08:13:49.754127+00:00",
   "source_raw_files": [
     "../data/raw/Actual_generation_202101010000_202509180000_Hour.csv",
     "../data/raw/Day-ahead_prices_202101010000_202509180000_Hour.csv"
@@ -69,7 +67,6 @@
       "Germany/Luxembourg [\u20ac/MWh] Last Week",
       "Renewable Ratio Previous Day",
       "Neighboring Countries Previous Day Spread",
-      "Neighbor Relative Spread Previous Day",
       "\u2205 DE/LU neighbours [\u20ac/MWh] Previous Day",
       "\u2205 DE/LU neighbours [\u20ac/MWh] Previous Day 24-Hour Std",
       "\u2205 DE/LU neighbours [\u20ac/MWh] Last Week"
@@ -99,8 +96,7 @@
       "public_holiday"
     ],
     "derived_spreads": [
-      "Neighboring Countries Previous Day Spread",
-      "Neighbor Relative Spread Previous Day"
+      "Neighboring Countries Previous Day Spread"
     ]
   }
 }
