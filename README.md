@@ -18,16 +18,16 @@ The data is sourced from **SMARD.de**, the official market data platform of the 
 
 ## 🚧 Project Roadmap
 
-This project is being developed over an 8-week sprint. This roadmap outlines the key milestones and will be updated as the project progresses.
+This roadmap outlines the key milestones and will be updated as the project progresses.
 
-* [x] **Week 1:** Project Scaffolding, Data Ingestion & Complete EDA with Feature Engineering
-* [ ] **Week 2:** Baseline Modeling & Experiment Tracking (MLflow)
-* [ ] **Week 3:** Containerization for Reproducibility (Docker)
-* [ ] **Week 4:** Automation with CI/CT Pipeline (GitHub Actions)
-* [ ] **Week 5:** Advanced Modeling & Feature Enrichment (XGBoost)
-* [ ] **Week 6:** Cloud Deployment on Microsoft Azure (FastAPI, Azure App Service)
-* [ ] **Week 7:** Project Showcase & Narrative Crafting
-* [ ] **Week 8:** Strategic Application & Interview Mastery
+* [x] **Milestone 1:** Project Scaffolding, Data Ingestion & Complete EDA with Feature Engineering
+* [ ] **Milestone 2:** Baseline Modeling & Experiment Tracking (MLflow)
+* [ ] **Milestone 3:** Containerization for Reproducibility (Docker)
+* [ ] **Milestone 4:** Automation with CI/CT Pipeline (GitHub Actions)
+* [ ] **Milestone 5:** Advanced Modeling & Feature Enrichment (XGBoost)
+* [ ] **Milestone 6:** Cloud Deployment on Microsoft Azure (FastAPI, Azure App Service)
+* [ ] **Milestone 7:** Project Showcase & Narrative Crafting
+* [ ] **Milestone 8:** Strategic Application & Interview Mastery
 
 ---
 
