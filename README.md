@@ -189,4 +189,12 @@ As the project is in its initial phase, the primary setup involves cloning the r
 * MLflow URI: `file:./mlruns` (local file-based tracking)
 * View runs: `mlflow ui --backend-store-uri file:./mlruns --port 5000`
 
+### Experiment Tracking Preview
+
+![MLflow-Experiment-Tracking](/images/MLflow-Experiment-Tracking.png)
+
+### 📷 FastAPI Deployment Preview
+
+![FastAPI-deployment](/images/FastAPI-deployment.png)
+
 ---
