@@ -1,0 +1,26 @@
+# Lightweight inference image for FastAPI API server
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install minimal system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy and install only inference dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy only necessary files
+COPY src/api.py ./src/
+COPY data/processed/best_model_xgboost_v1_20251009.joblib ./data/processed/
+COPY data/processed/ ./data/processed/
+
+# Expose port for API
+EXPOSE 8000
+
+# Set environment
+ENV PYTHONUNBUFFERED=1
+
+# Run FastAPI server
+CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]

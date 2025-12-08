@@ -25,7 +25,7 @@ This roadmap outlines the key milestones and will be updated as the project prog
 * [ ] **Milestone 3:** FastAPI Inference Service + Containerization (Docker)
 * [ ] **Milestone 4:** Automation with CI/CT Pipeline (GitHub Actions)
 * [ ] **Milestone 5:** Advanced Modeling & Feature Enrichment (XGBoost)
-* [ ] **Milestone 6:** Cloud Deployment on Microsoft Azure (FastAPI, Azure App Service)
+* [ ] **Milestone 6:** Cloud Deployment on Microsoft Azure (Azure App Service)
 * [ ] **Milestone 7:** Project Showcase & Narrative Crafting
 * [ ] **Milestone 8:** Strategic Application & Interview Mastery
 
