@@ -6,7 +6,7 @@
 
 This repository documents the development of a production-ready MLOps pipeline for forecasting day-ahead wholesale electricity prices in the German market. The goal of this project is to build a complete, automated system that demonstrates practical skills in MLOps and cloud engineering, moving beyond academic concepts to a deployable solution.
 
-**Note:** This is an active project currently in its initial development phase. The features and architecture described below represent the final goal of the 8-week development sprint.
+**Note:** This is an active project currently in its initial development phase. The features and architecture described below represent the final goal of the 8-milestone development plan.
 
 ## 🎯 The Business Problem
 
@@ -66,10 +66,12 @@ The planned architecture is designed for automation, reproducibility, and scalab
 │   │   ├── day_ahead_prices_clean.parquet
 │   │   └── day_ahead_prices_clean.metadata.json
 │   ├── processed/           # Model-ready feature datasets with train/test splits
-│   │   ├── features_v1_20251003.parquet
-│   │   ├── train_v1_20251003.parquet
-│   │   ├── test_v1_20251003.parquet
-│   │   └── corresponding .metadata.json files
+│   │   ├── features_v1_20251009.metadata.json
+│   │   ├── train_v1_20251009.metadata.json
+│   │   ├── test_v1_20251009.metadata.json
+│   │   ├── model_results_v1_20251009.csv
+│   │   ├── best_model_random_forest_tuned_v1_20251009.joblib
+│   │   └── best_model_xgboost_v1_20251009.joblib
 │   └── raw/                 # Raw data files from SMARD.de
 │       ├── Actual_generation_202101010000_202509180000_Hour.csv
 │       └── Day-ahead_prices_202101010000_202509180000_Hour.csv
@@ -152,34 +154,30 @@ As the project is in its initial phase, the primary setup involves cloning the r
 
 ## 📊 Milestone 2 Accomplishments (In Progress)
 
-### Baseline Model Training
+### Baseline & Tuned Models
 
-* ✅ **Multi-Model Comparison**: Trained 4 baseline regression models on engineered features
-  * Ridge Regression (L2 regularization)
-  * Lasso Regression (L1 regularization with feature selection)
-  * Decision Tree Regressor
-  * Random Forest Regressor
+* ✅ **Multi-Model Comparison**: Ridge, Lasso, Decision Tree, Random Forest, XGBoost, LightGBM trained on engineered features
+* ✅ **Standardized Pipeline**: Scikit-learn pipelines with scaling to prevent leakage across splits
+* ✅ **Hyperparameter Tuning**: RandomizedSearchCV applied to the best validation performer
+* ✅ **Results Logged to Disk**: Metrics stored in `data/processed/model_results_v1_20251009.csv`; tuned artifacts saved as joblib files
+* ⏳ **MLflow Tracking**: Not yet enabled—next immediate task
 
-* ✅ **Standardized Pipeline**: Implemented scikit-learn pipelines with automatic feature scaling
-  * Prevents data leakage between train/validation/test splits
-  * Ensures consistent preprocessing across all models
+### Key Insights (current run)
 
-* ✅ **Comprehensive Evaluation**:
-  * **Best Model**: Lasso Regression
-    * Test R² Score: **0.5298** (explains ~53% of price variation)
-    * Test MAE: **26.03 EUR/MWh** (average prediction error)
-    * Test MSE: 1559.02
-  * Ridge: Test R² = 0.5129, MAE = 27.08 EUR/MWh
-  * Random Forest: Test R² = 0.5085, MAE = 26.19 EUR/MWh
-  * Decision Tree: Test R² = 0.1576 (overfitting detected)
+* Tree ensembles benefited from tuning; both tuned Random Forest and XGBoost artifacts are stored
+* Feature scaling remains critical for linear baselines
+* Further gains likely from richer market features (demand/imports), weather forecast data, and systematic hyperparameter sweeps
 
-* ✅ **Model Persistence**: Best model saved as joblib for production inference
+### Model Persistence
 
-### Key Insights from Baseline Models
+* Tuned models saved: Random Forest and XGBoost (`best_model_*_v1_20251009.joblib`)
+* Feature/train/test metadata stored alongside results for reproducibility
 
-* **Lasso Outperformed**: Linear models performed better than tree-based models, suggesting electricity prices follow more linear relationships with engineered features
-* **Overfitting Detected**: Decision tree severely overfitted (validation R² = 0.854 → test R² = 0.158), validating the need for regularization
-* **Feature Scaling Critical**: Ridge/Lasso models benefit significantly from StandardScaler preprocessing
-* **Moderate Performance**: R² ~0.53 indicates other market factors (demand, imports, strategic reserves) not yet captured in features
+### Next Steps
+
+* Integrate MLflow logging into `src/train.py` to track params, metrics, and artifacts
+* Add Dockerfiles (training + inference) and a docker-compose for local MLflow
+* Stand up CI/CT in GitHub Actions for lint/test and scheduled retraining
+* Expose inference via FastAPI using the saved best model
 
 ---
