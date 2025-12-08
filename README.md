@@ -21,7 +21,7 @@ The data is sourced from **SMARD.de**, the official market data platform of the 
 This roadmap outlines the key milestones and will be updated as the project progresses.
 
 * [x] **Milestone 1:** Project Scaffolding, Data Ingestion & Complete EDA with Feature Engineering
-* [ ] **Milestone 2:** Baseline Modeling & Experiment Tracking (MLflow)
+* [x] **Milestone 2:** Baseline Modeling & Experiment Tracking (MLflow) - *In Progress*
 * [ ] **Milestone 3:** Containerization for Reproducibility (Docker)
 * [ ] **Milestone 4:** Automation with CI/CT Pipeline (GitHub Actions)
 * [ ] **Milestone 5:** Advanced Modeling & Feature Enrichment (XGBoost)
@@ -75,7 +75,8 @@ The planned architecture is designed for automation, reproducibility, and scalab
 │       └── Day-ahead_prices_202101010000_202509180000_Hour.csv
 ├── notebooks/               # Jupyter notebooks (contains 01-EDA.ipynb for EDA)
 ├── scripts/                 # Utility and pipeline scripts (currently empty)
-├── src/                     # Source code for the project (currently empty)
+├── src/                     # Source code for the project
+│   └── train.py            # Baseline model training pipeline (Ridge, Lasso, Decision Tree, Random Forest)
 └── tests/                   # Unit and integration tests (currently empty)
 ```
 
@@ -85,7 +86,7 @@ The planned architecture is designed for automation, reproducibility, and scalab
 
 As the project is in its initial phase, the primary setup involves cloning the repository and creating a local Python environment. Instructions will be updated as key milestones (like Dockerization) are completed.
 
-**Week 1 Complete:** Comprehensive EDA and feature engineering has been implemented in `notebooks/01-EDA.ipynb`, with clean datasets and model-ready features saved to the `data/` directory. The rest of the pipeline (modeling, MLflow, Docker, CI/CD, API, and cloud deployment) is planned for upcoming weeks.
+**Milestone 1 Complete:** Comprehensive EDA and feature engineering has been implemented in `notebooks/01-EDA.ipynb`, with clean datasets and model-ready features saved to the `data/` directory. The rest of the pipeline (modeling, MLflow, Docker, CI/CD, API, and cloud deployment) is planned for upcoming weeks.
 
 1. **Clone the repository:**
 
@@ -123,7 +124,7 @@ As the project is in its initial phase, the primary setup involves cloning the r
 * Renewable energy ratio dynamics with temporal interactions
 * Autocorrelation analysis validated 24h and 168h cycles
 
-## 📊 Week 1 Accomplishments
+## 📊 Milestone 1 Accomplishments
 
 ### Data Processing Pipeline
 
@@ -146,5 +147,39 @@ As the project is in its initial phase, the primary setup involves cloning the r
 * **Parquet Storage**: Efficient columnar storage for all intermediate and final datasets
 * **Temporal Features**: Cyclic encoding for hour, day, month, and seasonal patterns
 * **Validation**: Autocorrelation analysis confirmed lag feature selection strategy
+
+---
+
+## 📊 Milestone 2 Accomplishments (In Progress)
+
+### Baseline Model Training
+
+* ✅ **Multi-Model Comparison**: Trained 4 baseline regression models on engineered features
+  * Ridge Regression (L2 regularization)
+  * Lasso Regression (L1 regularization with feature selection)
+  * Decision Tree Regressor
+  * Random Forest Regressor
+
+* ✅ **Standardized Pipeline**: Implemented scikit-learn pipelines with automatic feature scaling
+  * Prevents data leakage between train/validation/test splits
+  * Ensures consistent preprocessing across all models
+
+* ✅ **Comprehensive Evaluation**:
+  * **Best Model**: Lasso Regression
+    * Test R² Score: **0.5298** (explains ~53% of price variation)
+    * Test MAE: **26.03 EUR/MWh** (average prediction error)
+    * Test MSE: 1559.02
+  * Ridge: Test R² = 0.5129, MAE = 27.08 EUR/MWh
+  * Random Forest: Test R² = 0.5085, MAE = 26.19 EUR/MWh
+  * Decision Tree: Test R² = 0.1576 (overfitting detected)
+
+* ✅ **Model Persistence**: Best model saved as joblib for production inference
+
+### Key Insights from Baseline Models
+
+* **Lasso Outperformed**: Linear models performed better than tree-based models, suggesting electricity prices follow more linear relationships with engineered features
+* **Overfitting Detected**: Decision tree severely overfitted (validation R² = 0.854 → test R² = 0.158), validating the need for regularization
+* **Feature Scaling Critical**: Ridge/Lasso models benefit significantly from StandardScaler preprocessing
+* **Moderate Performance**: R² ~0.53 indicates other market factors (demand, imports, strategic reserves) not yet captured in features
 
 ---
