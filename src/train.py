@@ -12,7 +12,10 @@ The pipeline:
 5. Extracts feature importance from tree-based models
 6. Saves results and the best model for production use
 """
-
+import mlflow
+import mlflow.sklearn
+import mlflow.xgboost
+import mlflow.lightgbm
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -30,6 +33,9 @@ import joblib
 import warnings
 from typing import cast
 warnings.filterwarnings('ignore')
+
+mlflow.set_tracking_uri("file:./mlruns")
+mlflow.set_experiment("german-energy-price-forecasting")
 
 
 # ====================
@@ -151,6 +157,16 @@ if __name__ == "__main__":
             "test_mae": test_mae,
             "test_r2": test_r2
         }
+                # Log to MLflow
+        with mlflow.start_run(run_name=f"{model_name}_baseline"):
+            mlflow.log_params({"model_type": model_name})
+            mlflow.log_metric("val_mse", val_mse)
+            mlflow.log_metric("val_mae", val_mae)
+            mlflow.log_metric("val_r2", val_r2)
+            mlflow.log_metric("test_mse", test_mse)
+            mlflow.log_metric("test_mae", test_mae)
+            mlflow.log_metric("test_r2", test_r2)
+            mlflow.sklearn.log_model(pipeline, name="model")
 
     # ====================
     # STEP 5: TRAIN SOPHISTICATED MODELS (Gradient Boosting)
@@ -195,6 +211,16 @@ if __name__ == "__main__":
         "test_mae": mean_absolute_error(y_test, y_test_pred),
         "test_r2": r2_score(y_test, y_test_pred)
     }
+        # Log XGBoost to MLflow
+    with mlflow.start_run(run_name="xgboost_baseline"):
+        mlflow.log_params({
+            "model_type": "xgboost",
+            "n_estimators": 100,
+            "max_depth": 6,
+            "learning_rate": 0.1
+        })
+        mlflow.log_metrics(results["xgboost"])
+        mlflow.xgboost.log_model(xgb_model, name="model")
     
     print("Training LightGBM (this may take a moment)...", end=" ")
     
@@ -228,7 +254,16 @@ if __name__ == "__main__":
         "test_mae": mean_absolute_error(y_test, y_test_pred),
         "test_r2": r2_score(y_test, y_test_pred)
     }
-    
+        # Log LightGBM to MLflow
+    with mlflow.start_run(run_name="lightgbm_baseline"):
+        mlflow.log_params({
+            "model_type": "lightgbm",
+            "n_estimators": 100,
+            "max_depth": 6,
+            "learning_rate": 0.1
+        })
+        mlflow.log_metrics(results["lightgbm"])
+        mlflow.lightgbm.log_model(lgb_model, name="model")
     # ====================
     # STEP 6: HYPERPARAMETER TUNING FOR BEST MODEL
     # ====================
@@ -333,7 +368,28 @@ if __name__ == "__main__":
     improvement = ((best_test_r2_tuned - results[best_model_before_tuning]['test_r2']) / 
                    results[best_model_before_tuning]['test_r2'] * 100)
     print(f"  Improvement: {improvement:+.2f}%")
-
+        
+    # Log tuned model to MLflow
+    with mlflow.start_run(run_name=f"{best_model_before_tuning}_tuned"):
+        # Log the best parameters found by RandomizedSearchCV
+        if hasattr(tuned_model, 'best_params_'):
+            mlflow.log_params(tuned_model.best_params_)
+        
+        # Log tuned performance metrics
+        mlflow.log_metric("test_r2", best_test_r2_tuned)
+        mlflow.log_metric("test_mae", best_test_mae_tuned)
+        mlflow.log_metric("test_mse", best_test_mse_tuned)
+        mlflow.log_metric("improvement_pct", improvement)
+        
+        # Log the tuned model
+        if best_model_before_tuning in ["ridge", "lasso"]:
+            mlflow.sklearn.log_model(tuned_pipeline, name="model")
+        elif best_model_before_tuning == "xgboost":
+            mlflow.xgboost.log_model(tuned_model.best_estimator_, name="model")
+        elif best_model_before_tuning == "lightgbm":
+            mlflow.lightgbm.log_model(tuned_model.best_estimator_, name="model")
+        else:
+            mlflow.sklearn.log_model(tuned_model, name="model")
     # ====================
     # EVALUATE RESULTS
     # ====================
