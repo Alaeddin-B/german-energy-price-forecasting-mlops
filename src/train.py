@@ -13,9 +13,7 @@ The pipeline:
 6. Saves results and the best model for production use
 """
 import mlflow
-import mlflow.sklearn
-import mlflow.xgboost
-import mlflow.lightgbm
+
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -166,7 +164,7 @@ if __name__ == "__main__":
             mlflow.log_metric("test_mse", test_mse)
             mlflow.log_metric("test_mae", test_mae)
             mlflow.log_metric("test_r2", test_r2)
-            mlflow.sklearn.log_model(pipeline, name="model")
+            mlflow.sklearn.log_model(pipeline, name="model") # type: ignore
 
     # ====================
     # STEP 5: TRAIN SOPHISTICATED MODELS (Gradient Boosting)
@@ -220,7 +218,7 @@ if __name__ == "__main__":
             "learning_rate": 0.1
         })
         mlflow.log_metrics(results["xgboost"])
-        mlflow.xgboost.log_model(xgb_model, name="model")
+        mlflow.xgboost.log_model(xgb_model, name="model") # type: ignore
     
     print("Training LightGBM (this may take a moment)...", end=" ")
     
@@ -263,7 +261,7 @@ if __name__ == "__main__":
             "learning_rate": 0.1
         })
         mlflow.log_metrics(results["lightgbm"])
-        mlflow.lightgbm.log_model(lgb_model, name="model")
+        mlflow.lightgbm.log_model(lgb_model, name="model") # type: ignore
     # ====================
     # STEP 6: HYPERPARAMETER TUNING FOR BEST MODEL
     # ====================
@@ -383,13 +381,13 @@ if __name__ == "__main__":
         
         # Log the tuned model
         if best_model_before_tuning in ["ridge", "lasso"]:
-            mlflow.sklearn.log_model(tuned_pipeline, name="model")
+            mlflow.sklearn.log_model(tuned_pipeline, name="model") # type: ignore
         elif best_model_before_tuning == "xgboost":
-            mlflow.xgboost.log_model(tuned_model.best_estimator_, name="model")
+            mlflow.xgboost.log_model(tuned_model.best_estimator_, name="model") # type: ignore
         elif best_model_before_tuning == "lightgbm":
-            mlflow.lightgbm.log_model(tuned_model.best_estimator_, name="model")
+            mlflow.lightgbm.log_model(tuned_model.best_estimator_, name="model") # type: ignore
         else:
-            mlflow.sklearn.log_model(tuned_model, name="model")
+            mlflow.sklearn.log_model(tuned_model, name="model") # type: ignore
     # ====================
     # EVALUATE RESULTS
     # ====================
