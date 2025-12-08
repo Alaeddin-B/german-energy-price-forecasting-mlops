@@ -21,8 +21,8 @@ The data is sourced from **SMARD.de**, the official market data platform of the 
 This roadmap outlines the key milestones and will be updated as the project progresses.
 
 * [x] **Milestone 1:** Project Scaffolding, Data Ingestion & Complete EDA with Feature Engineering
-* [x] **Milestone 2:** Baseline Modeling & Experiment Tracking (MLflow) - *In Progress*
-* [ ] **Milestone 3:** Containerization for Reproducibility (Docker)
+* [x] **Milestone 2:** Baseline & Tuned Modeling with MLflow Experiment Tracking
+* [ ] **Milestone 3:** FastAPI Inference Service + Containerization (Docker)
 * [ ] **Milestone 4:** Automation with CI/CT Pipeline (GitHub Actions)
 * [ ] **Milestone 5:** Advanced Modeling & Feature Enrichment (XGBoost)
 * [ ] **Milestone 6:** Cloud Deployment on Microsoft Azure (FastAPI, Azure App Service)
@@ -155,32 +155,38 @@ As the project is in its initial phase, the primary setup involves cloning the r
 
 ---
 
-## 📊 Milestone 2 Accomplishments (In Progress)
+## 📊 Milestone 2 Accomplishments
 
 ### Baseline & Tuned Models
 
-* ✅ **Multi-Model Comparison**: Ridge, Lasso, Decision Tree, Random Forest, XGBoost, LightGBM trained on engineered features
+* ✅ **Multi-Model Comparison**: 6 models trained (Ridge, Lasso, Decision Tree, Random Forest, XGBoost, LightGBM)
 * ✅ **Standardized Pipeline**: Scikit-learn pipelines with scaling to prevent leakage across splits
-* ✅ **Hyperparameter Tuning**: RandomizedSearchCV applied to the best validation performer
-* ✅ **Results Logged to Disk**: Metrics stored in `data/processed/model_results_v1_20251009.csv`; tuned artifacts saved as joblib files
-* ⏳ **MLflow Tracking**: Not yet enabled—next immediate task
+* ✅ **Hyperparameter Tuning**: RandomizedSearchCV applied to XGBoost (best validator); tuned model saved
+* ✅ **MLflow Experiment Tracking**: All 7 runs (6 baseline + 1 tuned) logged with metrics, params, and models to `mlruns/`
+  * Run names: `ridge_baseline`, `lasso_baseline`, `decision_tree_baseline`, `random_forest_baseline`, `xgboost_baseline`, `lightgbm_baseline`, `xgboost_tuned`
+  * Metrics tracked: val_mse, val_mae, val_r2, test_mse, test_mae, test_r2, improvement_pct
+  * Models serialized and stored as MLflow artifacts
 
-### Key Insights (current run)
+### Best Model Performance
 
-* Tree ensembles benefited from tuning; both tuned Random Forest and XGBoost artifacts are stored
-* Feature scaling remains critical for linear baselines
-* Further gains likely from richer market features (demand/imports), weather forecast data, and systematic hyperparameter sweeps
+* **Best Pre-Tuning**: **XGBoost** with Test R² = **0.5729** (57.3% of price variance explained)
+  * Test MAE: 24.60 EUR/MWh (typical prediction error)
+  * Test MSE: 1416.11
+* **Best Tuned**: **XGBoost (tuned)** via RandomizedSearchCV
+  * Further gains achieved through hyperparameter optimization
 
-### Model Persistence
+### Key Findings
 
-* Tuned models saved: Random Forest and XGBoost (`best_model_*_v1_20251009.joblib`)
-* Feature/train/test metadata stored alongside results for reproducibility
+* **Top Features**: Neighboring country prices (39% importance) and Czech Republic prices (31%) are strongest predictors
+* **Gradient Boosting Dominance**: XGBoost/LightGBM significantly outperform linear models (Ridge/Lasso) and single trees
+* **Data Quality**: 41K+ hourly samples across 32 engineered features provided sufficient signal for ~57% R² performance
+* **Next Gains**: Likely from demand data, cross-border flows, weather forecasts, and advanced time series architectures (LSTM, Transformer)
 
-### Next Steps
+### Artifacts & Reproducibility
 
-* Integrate MLflow logging into `src/train.py` to track params, metrics, and artifacts
-* Add Dockerfiles (training + inference) and a docker-compose for local MLflow
-* Stand up CI/CT in GitHub Actions for lint/test and scheduled retraining
-* Expose inference via FastAPI using the saved best model
+* Model results: `data/processed/model_results_v1_20251009.csv`
+* Saved models: `best_model_xgboost_v1_20251009.joblib`, `best_model_xgboost_tuned_v1_20251009.joblib`
+* MLflow URI: `file:./mlruns` (local file-based tracking)
+* View runs: `mlflow ui --backend-store-uri file:./mlruns --port 5000`
 
 ---
