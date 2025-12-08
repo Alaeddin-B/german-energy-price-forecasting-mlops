@@ -22,7 +22,7 @@ This roadmap outlines the key milestones and will be updated as the project prog
 
 * [x] **Milestone 1:** Project Scaffolding, Data Ingestion & Complete EDA with Feature Engineering
 * [x] **Milestone 2:** Baseline & Tuned Modeling with MLflow Experiment Tracking
-* [ ] **Milestone 3:** FastAPI Inference Service + Containerization (Docker)
+* [x] **Milestone 3:** FastAPI Inference Service + Containerization (Docker)
 * [ ] **Milestone 4:** Automation with CI/CT Pipeline (GitHub Actions)
 * [ ] **Milestone 5:** Advanced Modeling & Feature Enrichment (XGBoost)
 * [ ] **Milestone 6:** Cloud Deployment on Microsoft Azure (Azure App Service)
@@ -37,19 +37,21 @@ The planned architecture is designed for automation, reproducibility, and scalab
 
 **Target Tech Stack:**
 
-* **Language & Libraries**: Python, Pandas, Scikit-learn, XGBoost
+* **Language & Libraries**: Python, Pandas, Scikit-learn, XGBoost, LightGBM
 * **Experiment Tracking**: MLflow
-* **Containerization**: Docker
-* **CI/CT Automation**: GitHub Actions
-* **API Development**: FastAPI
+* **Containerization**: Docker & Docker Compose
+* **CI/CT Automation**: GitHub Actions (planned)
+* **API Development**: FastAPI with Uvicorn
 * **Cloud Platform**: Microsoft Azure (App Service, Container Registry)
 
-### Planned MLOps Features
+### Implemented MLOps Features
 
-* **📊 Experiment Tracking**: All model training runs **will be logged** with **MLflow**, capturing code versions, parameters, and metrics for full auditability.
-* **📦 Reproducibility**: The entire application **will be containerized** with **Docker** to guarantee a consistent environment for training and deployment.
-* **⚙️ Automation (CI/CT)**: A **GitHub Actions** workflow **will be implemented** to automate code quality checks (CI) and schedule weekly model retraining (CT).
-* **☁️ Cloud Deployment**: The final model **will be served** via a **FastAPI** REST API, deployed as a Docker container on **Microsoft Azure App Service**.
+* **📊 Experiment Tracking**: ✅ All model training runs logged with **MLflow**, capturing code versions, parameters, and metrics for full auditability.
+* **📦 Reproducibility**: ✅ The entire application containerized with **Docker** to guarantee consistent environments for training and deployment.
+* **🐳 Orchestration**: ✅ **Docker Compose** service defined for coordinating train, MLflow UI, and inference API containers.
+* **🚀 API Inference**: ✅ **FastAPI** REST API implemented with health checks, Pydantic validation, and interactive documentation.
+* **⚙️ Automation (CI/CT)**: GitHub Actions workflow planned for automated testing and weekly model retraining (Milestone 4).
+* **☁️ Cloud Deployment**: Azure deployment planned for Milestone 6 (currently runs locally via Docker).
 
 ---
 
@@ -59,6 +61,9 @@ The planned architecture is designed for automation, reproducibility, and scalab
 ├── LICENSE
 ├── README.md
 ├── requirements.txt
+├── docker-compose.yml           # Docker Compose orchestration (train, mlflow, api services)
+├── Dockerfile.train             # Training image for model pipeline
+├── Dockerfile.inference         # Lightweight inference image for FastAPI
 ├── data/
 │   ├── interim/             # Clean intermediate datasets with metadata
 │   │   ├── actual_generation_clean.metadata.json
@@ -68,6 +73,7 @@ The planned architecture is designed for automation, reproducibility, and scalab
 │   ├── processed/           # Model-ready feature datasets with train/test splits and artifacts
 │   │   ├── best_model_random_forest_tuned_v1_20251009.joblib
 │   │   ├── best_model_xgboost_v1_20251009.joblib
+│   │   ├── best_model_xgboost_tuned_v1_20251009.joblib
 │   │   ├── features_v1_20251009.metadata.json
 │   │   ├── features_v1_20251009.parquet
 │   │   ├── model_results_v1_20251009.csv
@@ -78,20 +84,38 @@ The planned architecture is designed for automation, reproducibility, and scalab
 │   └── raw/                 # Raw data files from SMARD.de
 │       ├── Actual_generation_202101010000_202509180000_Hour.csv
 │       └── Day-ahead_prices_202101010000_202509180000_Hour.csv
-├── notebooks/               # Jupyter notebooks (contains 01-EDA.ipynb for EDA)
+├── mlruns/                      # MLflow experiment tracking directory
+├── notebooks/               # Jupyter notebooks (01-EDA.ipynb for EDA)
 ├── scripts/                 # Utility and pipeline scripts (currently empty)
 ├── src/                     # Source code for the project
-│   └── train.py            # Baseline model training pipeline (Ridge, Lasso, Decision Tree, Random Forest)
+│   ├── train.py            # Model training pipeline (Ridge, Lasso, Decision Tree, Random Forest, XGBoost, LightGBM)
+│   └── api.py              # FastAPI inference service with Pydantic validation
 └── tests/                   # Unit and integration tests (currently empty)
 ```
 
 ---
 
-## 🛠️ Setup (Work in Progress)
+## 🛠️ Setup
 
-As the project is in its initial phase, the primary setup involves cloning the repository and creating a local Python environment. Instructions will be updated as key milestones (like Dockerization) are completed.
+**Milestone 1-3 Complete:** Comprehensive EDA, baseline modeling with MLflow tracking, and containerized inference API fully implemented. The remaining pipeline (CI/CT automation, Azure cloud deployment) is planned for upcoming weeks.
 
-**Milestone 1 Complete:** Comprehensive EDA and feature engineering has been implemented in `notebooks/01-EDA.ipynb`, with clean datasets and model-ready features saved to the `data/` directory. The rest of the pipeline (modeling, MLflow, Docker, CI/CD, API, and cloud deployment) is planned for upcoming weeks.
+### Quick Start with Docker Compose
+
+The easiest way to run the full pipeline (training, MLflow UI, and API server) is with Docker Compose:
+
+```bash
+# Start all services (training, MLflow UI, FastAPI)
+docker compose up -d
+
+# View MLflow UI at http://localhost:5000
+# Access API documentation at http://localhost:8000/docs
+# Access API at http://localhost:8000
+
+# Stop all services
+docker compose down
+```
+
+### Local Setup (Without Docker)
 
 1. **Clone the repository:**
 
@@ -111,6 +135,24 @@ As the project is in its initial phase, the primary setup involves cloning the r
 
     ```bash
     pip install -r requirements.txt
+    ```
+
+4. **Train models:**
+
+    ```bash
+    python src/train.py
+    ```
+
+5. **Launch the API:**
+
+    ```bash
+    uvicorn src.api:app --host 0.0.0.0 --port 8000
+    ```
+
+6. **View MLflow results:**
+
+    ```bash
+    mlflow ui --backend-store-uri file:./mlruns
     ```
 
 ---
@@ -192,6 +234,52 @@ As the project is in its initial phase, the primary setup involves cloning the r
 ### Experiment Tracking Preview
 
 ![MLflow-Experiment-Tracking](/images/MLflow-Experiment-Tracking.png)
+
+## 📊 Milestone 3 Accomplishments
+
+### FastAPI Inference Service
+
+* ✅ **REST API Implementation**: Complete FastAPI application with `/health`, `/predict`, and `/docs` endpoints
+* ✅ **Pydantic Validation**: Strict input validation for all 32 features with type checking and bounds enforcement
+* ✅ **Interactive Documentation**: Auto-generated Swagger UI at `/docs` with example payloads
+* ✅ **Model Loading**: XGBoost model (`best_model_xgboost_tuned_v1_20251009.joblib`) loaded at startup
+* ✅ **Health Checks**: `/health` endpoint for Docker/Kubernetes liveness probes
+
+### Docker Containerization
+
+* ✅ **Training Image** (`Dockerfile.train`): Complete training pipeline in isolated environment
+  * Includes all dependencies (pandas, scikit-learn, xgboost, lightgbm, mlflow)
+  * Mounts volumes for data, mlruns, and source code
+  * Automatic model training and artifact generation
+  
+* ✅ **Inference Image** (`Dockerfile.inference`): Lightweight FastAPI server
+  * Minimal footprint with only inference dependencies (fastapi, uvicorn)
+  * Copies pre-trained model and necessary artifacts
+  * Exposes port 8000 for API requests
+  * Optimized layer caching for fast builds
+
+### Docker Compose Orchestration
+
+* ✅ **Multi-Service Coordination**: Three services working together
+  * **train**: Runs complete training pipeline on demand
+  * **mlflow**: MLflow UI server (<http://localhost:5000>) for experiment tracking
+  * **api**: FastAPI inference server (<http://localhost:8000/docs>)
+  
+* ✅ **Volume Mounts**: Persistent data sharing between containers
+  * `./data`: Model-ready datasets and trained artifacts
+  * `./mlruns`: MLflow experiment tracking data
+  * `./src`: Source code for hot-reload capability
+  
+* ✅ **Network Communication**: Services discoverable by name (e.g., `mlflow` container for training service)
+* ✅ **Environment Configuration**: Centralized MLflow tracking URI and Python settings
+
+### Key Features
+
+* **Production-Ready**: Proper error handling, logging, and HTTP status codes
+* **Type Safety**: Full Pydantic validation prevents invalid requests
+* **Reproducibility**: Exact feature names from training pipeline ensure consistency
+* **Scalability**: Stateless design allows horizontal scaling via container orchestration
+* **Observability**: Health checks and detailed API documentation
 
 ### 📷 FastAPI Deployment Preview
 
