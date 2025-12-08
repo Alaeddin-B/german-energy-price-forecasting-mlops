@@ -1,0 +1,43 @@
+services:
+  # Training service
+  train:
+    build:
+      context: .
+      dockerfile: Dockerfile.train
+    container_name: electricity-price-train
+    volumes:
+      # Mount local directories so changes persist on host
+      - ./data:/app/data
+      - ./mlruns:/app/mlruns
+      - ./src:/app/src
+      - ./notebooks:/app/notebooks
+    environment:
+      # MLflow tracking URI points to local mlruns folder
+      MLFLOW_TRACKING_URI: file:./mlruns
+      PYTHONUNBUFFERED: "1"
+    # Don't auto-restart; useful for debugging
+    restart: no
+
+  # MLflow UI service
+  mlflow:
+    image: python:3.11-slim
+    container_name: electricity-price-mlflow
+    working_dir: /mlflow
+    command: >
+      bash -c "pip install mlflow --quiet &&
+               mlflow ui --backend-store-uri file:./mlruns
+                         --host 0.0.0.0
+                         --port 5000"
+    volumes:
+      # Share mlruns folder between training container and MLflow UI
+      - ./mlruns:/mlflow/mlruns
+    ports:
+      # Expose MLflow UI on localhost:5000
+      - "5000:5000"
+    depends_on:
+      - train
+    restart: unless-stopped
+
+volumes:
+  # Named volume for persistent MLflow data (optional)
+  mlflow_data:
