@@ -22,20 +22,36 @@ services:
   mlflow:
     image: python:3.11-slim
     container_name: electricity-price-mlflow
-    working_dir: /mlflow
-    command: >
-      bash -c "pip install mlflow --quiet &&
-               mlflow ui --backend-store-uri file:./mlruns
-                         --host 0.0.0.0
-                         --port 5000"
+    working_dir: /app
+    entrypoint: >
+      sh -c "
+        pip install --quiet mlflow &&
+        mkdir -p /app/mlruns &&
+        mlflow ui --backend-store-uri file:/app/mlruns 
+                  --host 0.0.0.0 
+                  --port 5000
+                  --allowed-hosts '*'
+      "
     volumes:
       # Share mlruns folder between training container and MLflow UI
-      - ./mlruns:/mlflow/mlruns
+      - ./mlruns:/app/mlruns
     ports:
       # Expose MLflow UI on localhost:5000
       - "5000:5000"
-    depends_on:
-      - train
+    restart: unless-stopped
+
+  # FastAPI inference service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.inference
+    container_name: electricity-price-api
+    volumes:
+      - ./data/processed:/app/data/processed
+    environment:
+      PYTHONUNBUFFERED: "1"
+    ports:
+      - "8000:8000"
     restart: unless-stopped
 
 volumes:
