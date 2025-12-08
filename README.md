@@ -61,17 +61,20 @@ The planned architecture is designed for automation, reproducibility, and scalab
 ├── requirements.txt
 ├── data/
 │   ├── interim/             # Clean intermediate datasets with metadata
-│   │   ├── actual_generation_clean.parquet
 │   │   ├── actual_generation_clean.metadata.json
-│   │   ├── day_ahead_prices_clean.parquet
-│   │   └── day_ahead_prices_clean.metadata.json
-│   ├── processed/           # Model-ready feature datasets with train/test splits
-│   │   ├── features_v1_20251009.metadata.json
-│   │   ├── train_v1_20251009.metadata.json
-│   │   ├── test_v1_20251009.metadata.json
-│   │   ├── model_results_v1_20251009.csv
+│   │   ├── actual_generation_clean.parquet
+│   │   ├── day_ahead_prices_clean.metadata.json
+│   │   └── day_ahead_prices_clean.parquet
+│   ├── processed/           # Model-ready feature datasets with train/test splits and artifacts
 │   │   ├── best_model_random_forest_tuned_v1_20251009.joblib
-│   │   └── best_model_xgboost_v1_20251009.joblib
+│   │   ├── best_model_xgboost_v1_20251009.joblib
+│   │   ├── features_v1_20251009.metadata.json
+│   │   ├── features_v1_20251009.parquet
+│   │   ├── model_results_v1_20251009.csv
+│   │   ├── test_v1_20251009.metadata.json
+│   │   ├── test_v1_20251009.parquet
+│   │   ├── train_v1_20251009.metadata.json
+│   │   └── train_v1_20251009.parquet
 │   └── raw/                 # Raw data files from SMARD.de
 │       ├── Actual_generation_202101010000_202509180000_Hour.csv
 │       └── Day-ahead_prices_202101010000_202509180000_Hour.csv
