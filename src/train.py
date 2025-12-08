@@ -16,17 +16,20 @@ The pipeline:
 import pandas as pd
 import numpy as np
 from pathlib import Path
+from sklearn.base import BaseEstimator
 from sklearn.linear_model import Ridge, Lasso
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.feature_selection import RFECV, mutual_info_regression
-from sklearn.inspection import permutation_importance
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
+import xgboost as xgb
+import lightgbm as lgb
 import joblib
+import warnings
+from typing import cast
+warnings.filterwarnings('ignore')
 
 
 # ====================
@@ -60,6 +63,11 @@ if __name__ == "__main__":
     y = train_df[TARGET_COL]
     X_test = test_df.drop(columns=[TARGET_COL])
     y_test = test_df[TARGET_COL]
+    
+    # Sanitize column names for XGBoost/LightGBM (they don't like special characters like [, ], <, >)
+    # Replace problematic characters with underscores
+    X.columns = X.columns.str.replace('[', '_').str.replace(']', '_').str.replace('<', '_').str.replace('>', '_').str.replace('€', 'EUR')
+    X_test.columns = X_test.columns.str.replace('[', '_').str.replace(']', '_').str.replace('<', '_').str.replace('>', '_').str.replace('€', 'EUR')
 
     # ====================
     # STEP 3: CREATE VALIDATION SET
@@ -145,6 +153,188 @@ if __name__ == "__main__":
         }
 
     # ====================
+    # STEP 5: TRAIN SOPHISTICATED MODELS (Gradient Boosting)
+    # ====================
+    # Gradient boosting models are more powerful than simple ensembles
+    # They build trees sequentially, where each new tree corrects errors from previous trees
+    # XGBoost: eXtreme Gradient Boosting (industry standard, fast, handles regularization)
+    # LightGBM: Light Gradient Boosting Machine (faster, uses less memory, good for large datasets)
+    
+    print("\nTraining XGBoost (this may take a moment)...", end=" ")
+    
+    # XGBoost model with sensible defaults
+    # Parameters explained:
+    # - n_estimators: How many trees to build (more = more complex, but takes longer)
+    # - max_depth: How deep each tree can be (prevents overfitting)
+    # - learning_rate: How much each tree's predictions are weighted (smaller = slower but more careful)
+    # - subsample: Use 80% of data for each tree (reduces overfitting)
+    # - colsample_bytree: Use 80% of features for each tree (adds randomness, reduces overfitting)
+    xgb_model = xgb.XGBRegressor(
+        n_estimators=100,
+        max_depth=6,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        random_state=42,
+        n_jobs=-1  # Use all CPU cores for faster training
+    )
+    
+    # Train directly (XGBoost doesn't need scaling like Ridge/Lasso do)
+    xgb_model.fit(X_train, y_train)
+    print("Done")
+    
+    # Evaluate XGBoost
+    y_val_pred = xgb_model.predict(X_val)
+    y_test_pred = xgb_model.predict(X_test)
+    
+    results["xgboost"] = {
+        "val_mse": mean_squared_error(y_val, y_val_pred),
+        "val_mae": mean_absolute_error(y_val, y_val_pred),
+        "val_r2": r2_score(y_val, y_val_pred),
+        "test_mse": mean_squared_error(y_test, y_test_pred),
+        "test_mae": mean_absolute_error(y_test, y_test_pred),
+        "test_r2": r2_score(y_test, y_test_pred)
+    }
+    
+    print("Training LightGBM (this may take a moment)...", end=" ")
+    
+    # LightGBM model - similar logic to XGBoost but faster
+    lgb_model = lgb.LGBMRegressor(
+        n_estimators=100,
+        max_depth=6,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        random_state=42,
+        n_jobs=-1
+    )
+    
+    lgb_model.fit(X_train, y_train)
+    print("Done")
+    
+    # Evaluate LightGBM
+    y_val_pred = lgb_model.predict(X_val)
+    y_test_pred = lgb_model.predict(X_test)
+
+    # Convert predictions to numpy arrays to avoid type conflicts with scikit-learn metrics
+    y_val_pred = np.asarray(y_val_pred)
+    y_test_pred = np.asarray(y_test_pred)
+    
+    results["lightgbm"] = {
+        "val_mse": mean_squared_error(y_val, y_val_pred),
+        "val_mae": mean_absolute_error(y_val, y_val_pred),
+        "val_r2": r2_score(y_val, y_val_pred),
+        "test_mse": mean_squared_error(y_test, y_test_pred),
+        "test_mae": mean_absolute_error(y_test, y_test_pred),
+        "test_r2": r2_score(y_test, y_test_pred)
+    }
+    
+    # ====================
+    # STEP 6: HYPERPARAMETER TUNING FOR BEST MODEL
+    # ====================
+    # After comparing all models, we take the best one and tune its hyperparameters
+    # RandomizedSearchCV: Tests random combinations of parameters to find the best settings
+    # This is more efficient than GridSearchCV (which tests ALL combinations)
+    
+    # First, find which model performed best on validation set
+    val_r2_scores: dict[str, float] = {name: results[name]['val_r2'] for name in results}
+    best_model_before_tuning = max(val_r2_scores, key=lambda name: val_r2_scores[name])
+    
+    print("\n" + "="*80)
+    print(f"HYPERPARAMETER TUNING FOR BEST MODEL: {best_model_before_tuning.upper()}")
+    print("="*80)
+    print("Testing different parameter combinations to optimize performance...\n")
+    
+    # Define hyperparameter search space based on best model type
+    if best_model_before_tuning == "xgboost":
+        # XGBoost hyperparameters to tune
+        param_grid = {
+            'n_estimators': [50, 100, 150],
+            'max_depth': [4, 6, 8],
+            'learning_rate': [0.01, 0.1, 0.3],
+            'subsample': [0.7, 0.8, 0.9],
+            'colsample_bytree': [0.7, 0.8, 0.9]
+        }
+        base_model = xgb.XGBRegressor(random_state=42, n_jobs=-1)
+        
+    elif best_model_before_tuning == "lightgbm":
+        # LightGBM hyperparameters to tune
+        param_grid = {
+            'n_estimators': [50, 100, 150],
+            'max_depth': [4, 6, 8],
+            'learning_rate': [0.01, 0.1, 0.3],
+            'subsample': [0.7, 0.8, 0.9],
+            'colsample_bytree': [0.7, 0.8, 0.9]
+        }
+        base_model = lgb.LGBMRegressor(random_state=42, n_jobs=-1)
+        
+    elif best_model_before_tuning == "random_forest":
+        # Random Forest hyperparameters to tune
+        param_grid = {
+            'n_estimators': [50, 100, 150],
+            'max_depth': [6, 10, 15],
+            'min_samples_split': [2, 5, 10],
+            'min_samples_leaf': [1, 2, 4]
+        }
+        base_model = RandomForestRegressor(random_state=42, n_jobs=-1)
+        
+    else:
+        # For Ridge/Lasso
+        param_grid = {
+            'alpha': [0.001, 0.01, 0.1, 1, 10]
+        }
+        def get_base_model(model_name: str) -> BaseEstimator:
+            if model_name == "ridge":
+                return Ridge()
+            else:
+                return Lasso()
+        base_model = get_base_model(best_model_before_tuning)
+    
+    # RandomizedSearchCV: randomly samples 10 combinations and picks the best
+    # cv=3: Use 3-fold cross-validation (split data 3 ways, test each way)
+    # scoring='r2': Optimize for R² score (higher is better)
+    # Cast to BaseEstimator for type checker (runtime: no-op)
+    tuned_model = RandomizedSearchCV(
+        estimator=cast(BaseEstimator, base_model),
+        param_distributions=param_grid,
+        n_iter=10,
+        cv=3,
+        scoring='r2',
+        n_jobs=-1,
+        random_state=42
+    )
+    
+    # For tree-based models, no scaling needed
+    # For Ridge/Lasso, we need to scale
+    if best_model_before_tuning in ["ridge", "lasso"]:
+        tuned_pipeline = Pipeline([
+            ('scaler', StandardScaler()),
+            ('model', tuned_model)
+        ])
+        tuned_pipeline.fit(X_train, y_train)
+        y_test_pred_tuned = tuned_pipeline.predict(X_test)
+    else:
+        tuned_model.fit(X_train, y_train)
+        y_test_pred_tuned = tuned_model.predict(X_test)
+    
+    # Store tuned model results
+    best_test_r2_tuned = r2_score(y_test, y_test_pred_tuned)
+    best_test_mae_tuned = mean_absolute_error(y_test, y_test_pred_tuned)
+    best_test_mse_tuned = mean_squared_error(y_test, y_test_pred_tuned)
+    
+    print("Best hyperparameters found:")
+    if hasattr(tuned_model, 'best_params_'):
+        for param, value in tuned_model.best_params_.items():
+            print(f"  {param}: {value}")
+    print("\nTuned Model Performance:")
+    print(f"  Test R²: {best_test_r2_tuned:.4f} (was {results[best_model_before_tuning]['test_r2']:.4f})")
+    print(f"  Test MAE: {best_test_mae_tuned:.4f} EUR/MWh (was {results[best_model_before_tuning]['test_mae']:.4f})")
+    print(f"  Test MSE: {best_test_mse_tuned:.4f}")
+    improvement = ((best_test_r2_tuned - results[best_model_before_tuning]['test_r2']) / 
+                   results[best_model_before_tuning]['test_r2'] * 100)
+    print(f"  Improvement: {improvement:+.2f}%")
+
+    # ====================
     # EVALUATE RESULTS
     # ====================
     # Convert results dictionary to a pandas DataFrame for easy comparison
@@ -156,7 +346,7 @@ if __name__ == "__main__":
     results_df_sorted = results_df.sort_values("test_r2", ascending=False)
     
     print("\n" + "="*80)
-    print("MODEL PERFORMANCE COMPARISON")
+    print("MODEL PERFORMANCE COMPARISON (BASELINE + SOPHISTICATED)")
     print("="*80)
     print("\nMetrics explanation:")
     print("  - MSE (Mean Squared Error): Average of squared differences. Lower is better.")
@@ -165,12 +355,19 @@ if __name__ == "__main__":
     print("\n" + results_df_sorted.to_string())
     print("\n" + "="*80)
     
-    # Identify best performing model
+    # Identify best performing model BEFORE tuning
     best_model_name = results_df_sorted.index[0]
-    best_model = models[best_model_name]
+    best_model = models.get(best_model_name)  # Try to get from original models dict
+    if best_model is None:
+        # For sophisticated models not in original dict
+        if best_model_name == "xgboost":
+            best_model = xgb_model
+        elif best_model_name == "lightgbm":
+            best_model = lgb_model
+    
     best_results = results_df_sorted.iloc[0]
     
-    print(f"\nBest Model: {best_model_name.upper()}")
+    print(f"\nBest Model (Before Tuning): {best_model_name.upper()}")
     print(f"  Test R² Score: {best_results['test_r2']:.4f}")
     print(f"  Test MAE: {best_results['test_mae']:.4f} EUR/MWh")
     print(f"  Test MSE: {best_results['test_mse']:.4f}")
@@ -178,16 +375,19 @@ if __name__ == "__main__":
     # ====================
     # FEATURE IMPORTANCE (for tree-based models)
     # ====================
-    # Tree-based models (Decision Tree, Random Forest) can tell us which features matter most
+    # Tree-based models (Decision Tree, Random Forest, XGBoost, LightGBM) can tell us which features matter most
     # This is useful for understanding what drives electricity prices
-    if best_model_name in ["decision_tree", "random_forest"]:
+    if best_model_name in ["decision_tree", "random_forest", "xgboost", "lightgbm"]:
         print("\n" + "="*80)
         print("FEATURE IMPORTANCE (Top 10)")
         print("="*80)
         print("Shows which features have the strongest influence on price predictions\n")
         
         # Get feature importances from the best model
-        feature_importance = best_model.feature_importances_
+        if hasattr(best_model, 'feature_importances_'):
+            feature_importance = best_model.feature_importances_ # type: ignore
+        else:
+            feature_importance = np.zeros(X.shape[1])
         
         # Create a DataFrame pairing feature names with their importance scores
         importance_df = pd.DataFrame({
@@ -200,15 +400,28 @@ if __name__ == "__main__":
         print(f"\n(Total features: {len(importance_df)})")
     
     # ====================
-    # SAVE RESULTS
+    # SAVE RESULTS AND MODELS
     # ====================
     # Save the results for later reference and analysis
     results_path = DATA_DIR / f"model_results_{VERSION}_{STAMP}.csv"
     results_df_sorted.to_csv(results_path)
+    print("\n" + "="*80)
+    print("SAVING MODELS AND RESULTS")
+    print("="*80)
     print(f"\nResults saved to: {results_path}")
     
     # Save the best model for later use in predictions
-    import joblib
     model_path = DATA_DIR / f"best_model_{best_model_name}_{VERSION}_{STAMP}.joblib"
     joblib.dump(best_model, model_path)
-    print(f"Best model saved to: {model_path}")
+    print(f"Best model (pre-tuning) saved to: {model_path}")
+    
+    # Save the tuned model
+    tuned_model_path = DATA_DIR / f"best_model_{best_model_before_tuning}_tuned_{VERSION}_{STAMP}.joblib"
+    joblib.dump(tuned_model, tuned_model_path)
+    print(f"Tuned model saved to: {tuned_model_path}")
+    
+    print("\nTraining complete! Summary:")
+    print("  - Baseline models tested: 4")
+    print("  - Sophisticated models tested: 2 (XGBoost, LightGBM)")
+    print(f"  - Best model: {best_model_name} (R² = {best_results['test_r2']:.4f})")
+    print(f"  - Best tuned model: {best_model_before_tuning} (R² = {best_test_r2_tuned:.4f})")
