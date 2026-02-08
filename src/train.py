@@ -10,7 +10,8 @@ The pipeline:
 3. Evaluates each model on validation and test sets
 4. Compares metrics (MSE, MAE, R²) to find the best performer
 5. Extracts feature importance from tree-based models
-6. Saves results and the best model for production use
+6. Visualizes predictions vs actual values
+7. Saves results and the best model for production use
 """
 import mlflow
 
@@ -28,6 +29,7 @@ from sklearn.model_selection import train_test_split, RandomizedSearchCV
 import xgboost as xgb
 import lightgbm as lgb
 import joblib
+import matplotlib.pyplot as plt
 import warnings
 from typing import cast
 warnings.filterwarnings('ignore')
@@ -40,9 +42,13 @@ mlflow.set_experiment("german-energy-price-forecasting")
 # CONFIGURATION
 # ====================
 DATA_DIR = Path("./data/processed")  # Where our processed features are stored
+IMAGES_DIR = Path("./images")        # Where visualization plots are saved
 VERSION = "v1"                        # Feature engineering version
 STAMP = "20251009"                    # Date stamp for reproducibility
 TARGET_COL = "Germany/Luxembourg [€/MWh]"  # Column we're trying to predict
+
+# Create images directory if it doesn't exist
+IMAGES_DIR.mkdir(exist_ok=True)
 
 if __name__ == "__main__":
     # ====================
@@ -452,6 +458,120 @@ if __name__ == "__main__":
         # Display top 10 features
         print(importance_df.head(10).to_string(index=False))
         print(f"\n(Total features: {len(importance_df)})")
+    
+    # ====================
+    # STEP 7: VISUALIZE PREDICTIONS VS ACTUAL
+    # ====================
+    # Create diagnostic plots to visually assess model performance
+    # This helps identify patterns in prediction errors and model behavior
+    print("\n" + "="*80)
+    print("GENERATING PREDICTION VISUALIZATIONS")
+    print("="*80)
+    
+    # Get predictions from the best tuned model for both validation and test sets
+    if best_model_before_tuning in ["ridge", "lasso"]:
+        y_val_pred_final = tuned_pipeline.predict(X_val)
+        y_test_pred_final = tuned_pipeline.predict(X_test)
+    else:
+        y_val_pred_final = tuned_model.predict(X_val)
+        y_test_pred_final = tuned_model.predict(X_test)
+    
+    # Create a figure with 2 subplots side by side
+    fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+    fig.suptitle(f'Model Performance: {best_model_before_tuning.upper()} (Tuned)', 
+                 fontsize=16, fontweight='bold')
+    
+    # ===== SUBPLOT 1: Validation Set =====
+    ax1 = axes[0]
+    
+    # Scatter plot: Actual vs Predicted
+    ax1.scatter(y_val, y_val_pred_final, alpha=0.5, s=20, edgecolors='k', linewidth=0.5)
+    
+    # Perfect prediction line (45-degree line)
+    min_val = min(y_val.min(), y_val_pred_final.min()) # type: ignore
+    max_val = max(y_val.max(), y_val_pred_final.max()) # type: ignore
+    ax1.plot([min_val, max_val], [min_val, max_val], 'r--', lw=2, label='Perfect Prediction')
+    
+    # Add metrics as text
+    val_r2_final = r2_score(y_val, y_val_pred_final)
+    val_mae_final = mean_absolute_error(y_val, y_val_pred_final)
+    val_mse_final = mean_squared_error(y_val, y_val_pred_final)
+    val_rmse_final = np.sqrt(val_mse_final)
+    
+    textstr = f'R² = {val_r2_final:.4f}\nMAE = {val_mae_final:.2f} €/MWh\nRMSE = {val_rmse_final:.2f} €/MWh'
+    ax1.text(0.05, 0.95, textstr, transform=ax1.transAxes, fontsize=11,
+             verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+    
+    ax1.set_xlabel('Actual Price (€/MWh)', fontsize=12, fontweight='bold')
+    ax1.set_ylabel('Predicted Price (€/MWh)', fontsize=12, fontweight='bold')
+    ax1.set_title('Validation Set Performance', fontsize=14, fontweight='bold')
+    ax1.legend(loc='lower right')
+    ax1.grid(True, alpha=0.3)
+    
+    # ===== SUBPLOT 2: Test Set =====
+    ax2 = axes[1]
+    
+    # Scatter plot: Actual vs Predicted
+    ax2.scatter(y_test, y_test_pred_final, alpha=0.5, s=20, edgecolors='k', linewidth=0.5, color='green')
+    
+    # Perfect prediction line
+    min_val_test = min(y_test.min(), y_test_pred_final.min()) # type: ignore
+    max_val_test = max(y_test.max(), y_test_pred_final.max()) # type: ignore
+    ax2.plot([min_val_test, max_val_test], [min_val_test, max_val_test], 'r--', lw=2, label='Perfect Prediction')
+    
+    # Add metrics as text
+    textstr_test = f'R² = {best_test_r2_tuned:.4f}\nMAE = {best_test_mae_tuned:.2f} €/MWh\nRMSE = {np.sqrt(best_test_mse_tuned):.2f} €/MWh'
+    ax2.text(0.05, 0.95, textstr_test, transform=ax2.transAxes, fontsize=11,
+             verticalalignment='top', bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.5))
+    
+    ax2.set_xlabel('Actual Price (€/MWh)', fontsize=12, fontweight='bold')
+    ax2.set_ylabel('Predicted Price (€/MWh)', fontsize=12, fontweight='bold')
+    ax2.set_title('Test Set Performance (Held-Out Data)', fontsize=14, fontweight='bold')
+    ax2.legend(loc='lower right')
+    ax2.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    
+    # Save the plot
+    plot_path = IMAGES_DIR / f"model_predictions_{best_model_before_tuning}_tuned_{VERSION}_{STAMP}.png"
+    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    print(f"\n✓ Prediction plot saved to: {plot_path}")
+    
+    # Also create a time series comparison plot (last 500 hours of test set)
+    fig2, ax = plt.subplots(figsize=(16, 6))
+    
+    # Get the last 500 samples for better visibility
+    n_samples = min(500, len(y_test))
+    indices = range(len(y_test) - n_samples, len(y_test))
+    
+    ax.plot(indices, y_test.iloc[-n_samples:], label='Actual Price', linewidth=2, alpha=0.7)
+    ax.plot(indices, y_test_pred_final[-n_samples:], label='Predicted Price', linewidth=2, alpha=0.7)
+    ax.fill_between(indices, y_test.iloc[-n_samples:], y_test_pred_final[-n_samples:], 
+                     alpha=0.2, label='Prediction Error')
+    
+    ax.set_xlabel('Time Index (Hourly)', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Price (€/MWh)', fontsize=12, fontweight='bold')
+    ax.set_title(f'Time Series: Actual vs Predicted Prices (Last {n_samples} Hours)\n{best_model_before_tuning.upper()} Model', 
+                 fontsize=14, fontweight='bold')
+    ax.legend(loc='best')
+    ax.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    
+    # Save time series plot
+    ts_plot_path = IMAGES_DIR / f"model_timeseries_{best_model_before_tuning}_tuned_{VERSION}_{STAMP}.png"
+    plt.savefig(ts_plot_path, dpi=300, bbox_inches='tight')
+    print(f"✓ Time series plot saved to: {ts_plot_path}")
+    
+    # Log plots to MLflow
+    with mlflow.start_run(run_name=f"{best_model_before_tuning}_tuned_with_plots"):
+        mlflow.log_artifact(str(plot_path), artifact_path="plots")
+        mlflow.log_artifact(str(ts_plot_path), artifact_path="plots")
+        mlflow.log_metric("test_r2", best_test_r2_tuned)
+        mlflow.log_metric("test_mae", best_test_mae_tuned)
+        mlflow.log_metric("test_rmse", np.sqrt(best_test_mse_tuned))
+    
+    print("\n✓ Visualization complete! Check the images/ folder for plots.")
     
     # ====================
     # SAVE RESULTS AND MODELS

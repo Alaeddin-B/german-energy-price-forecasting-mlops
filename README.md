@@ -84,11 +84,16 @@ The planned architecture is designed for automation, reproducibility, and scalab
 │   └── raw/                 # Raw data files from SMARD.de
 │       ├── Actual_generation_202101010000_202509180000_Hour.csv
 │       └── Day-ahead_prices_202101010000_202509180000_Hour.csv
+├── images/                      # Visualizations and plots (model diagnostics, MLflow screenshots)
+│   ├── model_predictions_*.png
+│   ├── model_timeseries_*.png
+│   ├── MLflow-Experiment-Tracking.png
+│   └── FastAPI-deployment.png
 ├── mlruns/                      # MLflow experiment tracking directory
 ├── notebooks/               # Jupyter notebooks (01-EDA.ipynb for EDA)
 ├── scripts/                 # Utility and pipeline scripts (currently empty)
 ├── src/                     # Source code for the project
-│   ├── train.py            # Model training pipeline (Ridge, Lasso, Decision Tree, Random Forest, XGBoost, LightGBM)
+│   ├── train.py            # Model training pipeline with visualization generation
 │   └── api.py              # FastAPI inference service with Pydantic validation
 └── tests/                   # Unit and integration tests (currently empty)
 ```
@@ -228,8 +233,16 @@ docker compose down
 
 * Model results: `data/processed/model_results_v1_20251009.csv`
 * Saved models: `best_model_xgboost_v1_20251009.joblib`, `best_model_xgboost_tuned_v1_20251009.joblib`
+* Prediction visualizations: `images/model_predictions_*.png`, `images/model_timeseries_*.png`
 * MLflow URI: `file:./mlruns` (local file-based tracking)
 * View runs: `mlflow ui --backend-store-uri file:./mlruns --port 5000`
+
+### Diagnostic Visualizations
+
+* ✅ **Scatter Plots**: Actual vs Predicted prices with R², MAE, RMSE metrics
+* ✅ **Time Series Plots**: Last 500 hours showing prediction accuracy over time
+* ✅ **Automatic Generation**: Created during training and logged to MLflow artifacts
+* ✅ **Error Analysis**: Visual identification of prediction patterns and outliers
 
 ### Experiment Tracking Preview
 
@@ -281,8 +294,19 @@ docker compose down
 * **Scalability**: Stateless design allows horizontal scaling via container orchestration
 * **Observability**: Health checks and detailed API documentation
 
-### 📷 FastAPI Deployment Preview
+### 📷 Visualizations
+
+**FastAPI Interactive Documentation**
 
 ![FastAPI-deployment](/images/FastAPI-deployment.png)
+
+**Model Performance Diagnostics** - *Generated during training*
+
+The training pipeline automatically creates diagnostic visualizations to assess model quality:
+- **Scatter plots**: Actual vs Predicted prices for both validation and test sets
+- **Time series plots**: Last 500 hours showing prediction tracking over time
+- **Performance metrics**: R², MAE, RMSE displayed on plots for easy interpretation
+
+These plots are saved to `images/` and logged to MLflow for experiment tracking.
 
 ---
